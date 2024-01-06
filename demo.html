@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+</head>
+<body>
+  
+  <div>
+    <input type="email" id="email">
+    <input type="password" id="password">
+    <button type="button" id="login">登入</button>
+  </div>
+
+  <div>
+    <button type="button" id="check">確認是否登入</button>
+    <button type="button" id="getProducts">取得後台的產品列表</button>
+    <button type="button" id="addProduct">新增一個產品</button>
+    <button type="button" id="delProduct">刪除一個產品</button>
+  </div>
+
+  <script>
+  const url = 'https://vue3-course-api.hexschool.io/v2'; // 請加入站點
+  const api_path = 'florafirstapi'; // 請加入個人 API Path
+
+  
+  
+  // #1 如何串接 API 資料
+  
+  const emailInput = document.querySelector('#email');
+  const pwInput = document.querySelector('#password');
+  const loginBtn = document.querySelector('#login');
+  const checkBtn = document.querySelector('#check');
+  const getProductsBtn = document.querySelector('#getProducts');
+  const addProductBtn = document.querySelector('#addProduct');
+  const delProductBtn = document.querySelector('#delProduct');
+
+  loginBtn.addEventListener('click', login);
+//login
+//tingyu1112@gmail.com
+//Tresbien1112
+//一開始token沒東西，因為cookie沒有存放東西，待觸發login()後cookie就會被賦予值，token才會有東西
+const token = document.cookie
+  .split("; ")
+  .find((row) => row.startsWith("floraFirstApiToken="))
+  ?.split("=")[1];
+ 
+axios.defaults.headers.common['Authorization']=token;
+
+  function login() {
+    const username = emailInput.value;
+    const password = pwInput.value;
+    const user = {
+      username,
+      password
+    };//縮寫形式
+    console.log(username, password)
+
+    // #2 發送 API 至遠端並登入（並儲存 Token）
+    axios.post(`${url}/admin/signin`, user)
+    .then((res)=>{
+      console.log(res);
+      const { token, expired } = res.data;
+      console.log(token, expired);
+      // document.cookie =
+      // "doSomethingOnlyOnce=true; expires=Fri, 31 Dec 9999 23:59:59 GMT";
+      //用這個方式可以把token存進去cookie裡,cookie有東西後，token就會有東西了
+      document.cookie =
+      `floraFirstApiToken=${token}; expires=${new Date(expired)}`;
+      console.log(token)
+
+    }).catch((err)=>{
+      console.dir(err)
+    }) 
+  };
+
+  checkBtn.addEventListener('click', checkLogin);
+  function checkLogin(params) {
+    // #3 取得 Token（Token 僅需要設定一次） 用這個方式可以
+  // const token = document.cookie
+  // .split("; ")
+  // .find((row) => row.startsWith("floraFirstApiToken="))
+  // ?.split("=")[1];
+  // console.log(token)
+  //   // #4  確認是否登入
+  //  axios.defaults.headers.common['Authorization']=token;
+  console.log(token)
+    axios.post(`${url}/api/user/check`)
+    .then((res)=>{
+      console.log(res.data)
+    }).catch(err=>console.log(err))
+  }
+
+  getProductsBtn.addEventListener('click', getProducts)
+  function getProducts() {
+    // #5 取得後台產品列表
+    axios.get(`${url}/api/${api_path}/admin/products/all`)
+    .then((res)=>{
+      console.log(res)
+    }).catch((err)=>{console.log(err)})
+  }
+
+
+  addProductBtn.addEventListener('click', addProduct)
+  function addProduct() {
+    const product = {
+      data: {
+        title: '[賣]動物園造型衣服3', 
+        category: '衣服2',
+        origin_price: 100,
+        price: 300,
+        unit: '個',
+        description: 'Sit down please 名設計師設計',
+        content: '這是內容',
+        is_enabled: 1,
+        imageUrl: 'https://images.unsplash.com/photo-1573662012516-5cb4399006e7?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1267&q=80'
+      }
+    };
+    // #6 新增一個產品
+    axios.post(`${url}/api/${api_path}/admin/product`, product).then((res)=>{
+      console.log(res)
+    }).catch((err)=>console.log(err))
+  };
+
+
+  delProductBtn.addEventListener('click', removeProduct())
+  function removeProduct() {
+    // #7 刪除一個產品 注意id要用產品裡面的id 不是數字
+    axios.delete(`${url}/api/${api_path}/admin/product/-NnO7OT4Fhbzbatz-WhV`).then((res)=>{
+      console.log(res)
+    }).catch((err)=>{
+      console.log(err)
+    })
+  }
+
+  </script>
+</body>
+</html>
